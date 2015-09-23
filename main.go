@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/dark-lab/Democracy/shared/config"
+	"github.com/dark-lab/Democracy/shared/utils"
 	. "github.com/mattn/go-getopt"
 	"github.com/op/go-logging"
 )
@@ -65,8 +66,8 @@ func main() {
 			Id          int64
 			Id_str      string
 		}
-		var myUniqueMentions map[string]int
-		myUniqueMentions = make(map[string]int)
+		var myUniqueMentions map[int64]int
+		myUniqueMentions = make(map[int64]int)
 		fmt.Println("-== Account: " + i + " ==-")
 		fmt.Println("\tTweets: " + strconv.Itoa(len(myTweets[i])))
 
@@ -79,16 +80,26 @@ func main() {
 				for _, mentions = range t.Entities.User_mentions {
 
 					mymentions++
-					myUniqueMentions[mentions.Name]++
+					myUniqueMentions[mentions.Id]++
 
 				}
 			}
 		}
+		Followers := GetFollowers(api, i)
+		Following := GetFollowing(api, i)
+		var Corrispective []int64
+		for _, i := range Followers {
+			if utils.IntInSlice(i, Following) == true {
+				Corrispective = append(Corrispective, i)
+			}
+		}
+
 		fmt.Println("\tof wich, there are " + strconv.Itoa(retweets) + " retweets")
 		fmt.Println("\tof wich, there are " + strconv.Itoa(len(myUniqueMentions)) + " unique mentions (not in retweets)")
 		fmt.Println("\tof wich, there are " + strconv.Itoa(mymentions) + " total mentions (not in retweets)")
-		fmt.Println("\tFollowers: " + strconv.Itoa(len(GetFollowers(api, i))))
-		fmt.Println("\tFollowing: " + strconv.Itoa(len(GetFollowing(api, i))))
+		fmt.Println("\tFollowers: " + strconv.Itoa(len(Followers)))
+		fmt.Println("\tFollowing: " + strconv.Itoa(len(Following)))
+		fmt.Println("\tFollowers && Following: " + strconv.Itoa(len(Corrispective)))
 
 	}
 

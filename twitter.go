@@ -18,17 +18,16 @@ func GetTwitter(conf *config.Configuration) *anaconda.TwitterApi {
 	return api
 }
 
-func GetFollowers(api *anaconda.TwitterApi, account string) []string {
+func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 	v := url.Values{}
 	v.Set("screen_name", account)
-	//follower, _ := api.GetFollowersList(v)
 	var User anaconda.User
-	var Followers []string
+	var Followers []int64
 	pages := api.GetFollowersListAll(v)
 	for page := range pages {
 		//Print the current page of followers
 		for _, User = range page.Followers {
-			Followers = append(Followers, User.Name)
+			Followers = append(Followers, User.Id)
 		}
 	}
 	return Followers
