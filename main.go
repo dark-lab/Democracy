@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/ChimeraCoder/anaconda"
+	"os"
+	"regexp"
+	"strconv"
+
 	"github.com/dark-lab/Democracy/shared/config"
 	. "github.com/mattn/go-getopt"
-
 	"github.com/op/go-logging"
-	"net/url"
-	"os"
-	_ "regexp"
-	"strconv"
 )
 
 var log = logging.MustGetLogger("democracy")
@@ -46,60 +44,52 @@ func main() {
 		panic(err)
 	}
 
+	myTweets := make(map[string]timelinesTweets)
 	api := GetTwitter(&conf)
 
-	type timelinesTweets map[string]anaconda.Tweet
-
-	myTweets := make(map[string]timelinesTweets)
+	retweetRegex, _ := regexp.Compile(`^RT`) // detecting retweets
 
 	for _, account := range conf.TwitterAccounts {
-
-		myTweets[account] = make(timelinesTweets)
-		log.Info("Searching info for: %#v\n", account)
-
-		var max_id int64
-
-		searchresult, _ := api.GetUsersShow(account, nil)
-		fmt.Println("URL:" + searchresult.URL)
-
-		v := url.Values{}
-		v.Set("user_id", searchresult.IdStr)
-		v.Set("count", "1") //getting twitter first tweet
-		timeline, _ := api.GetUserTimeline(v)
-		max_id = timeline[0].Id // putting it as max_id
-		time, _ := timeline[0].CreatedAtTime()
-
-		//retweetRegex, _ := regexp.Compile(`^RT`)
-		for time.Unix() >= conf.FetchFrom { //until we don't exceed our range of interest
-
-			v = url.Values{}
-			v.Set("user_id", searchresult.IdStr)
-			v.Set("count", "200")
-			v.Set("max_id", strconv.FormatInt(max_id, 10))
-			timeline, _ := api.GetUserTimeline(v)
-			for _, tweet := range timeline {
-				//fmt.Println("Tweet time:" + tweet.CreatedAt + " Tweet: " + tweet.Text)
-				if tweet.Id < max_id {
-					max_id = tweet.Id
-				}
-				//	if retweetRegex.MatchString(tweet.Text) == false {
-				time, _ = tweet.CreatedAtTime()
-
-				myTweets[account][tweet.IdStr] = tweet
-
-				//for _, mentions := range tweet.Entities.User_mentions {
-				//	fmt.Println("HA MENZIONATO:" + mentions.Name)
-				//}
-
-				//	}
-			}
-		}
-
+		myTweets[account] = GetTimelines(api, account, conf.FetchFrom)
 	}
 
+	log.Info("Analyzing && collecting data")
+
 	for i := range myTweets {
-		fmt.Println("Account: " + i)
-		fmt.Println("Tweets: " + strconv.Itoa(len(myTweets[i])))
+		var retweets int
+		var mymentions int
+		var mentions struct {
+			Name        string
+			Indices     []int
+			Screen_name string
+			Id          int64
+			Id_str      string
+		}
+		var myUniqueMentions map[string]int
+		myUniqueMentions = make(map[string]int)
+		fmt.Println("-== Account: " + i + " ==-")
+		fmt.Println("\tTweets: " + strconv.Itoa(len(myTweets[i])))
+
+		for _, t := range myTweets[i] {
+			// detecting retweets
+			if retweetRegex.MatchString(t.Text) == true {
+				retweets++
+			} else {
+				//detecting mentions outside retweets
+				for _, mentions = range t.Entities.User_mentions {
+
+					mymentions++
+					myUniqueMentions[mentions.Name]++
+
+				}
+			}
+		}
+		fmt.Println("\tof wich, there are " + strconv.Itoa(retweets) + " retweets")
+		fmt.Println("\tof wich, there are " + strconv.Itoa(len(myUniqueMentions)) + " unique mentions (not in retweets)")
+		fmt.Println("\tof wich, there are " + strconv.Itoa(mymentions) + " total mentions (not in retweets)")
+		fmt.Println("\tFollowers: " + strconv.Itoa(len(GetFollowers(api, i))))
+		fmt.Println("\tFollowing: " + strconv.Itoa(len(GetFollowing(api, i))))
+
 	}
 
 }
