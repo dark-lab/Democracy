@@ -28,6 +28,7 @@ func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 		//Print the current page of followers
 		for _, User = range page.Followers {
 			Followers = append(Followers, User.Id)
+			log.Debug("Getting another follower", User.Id)
 		}
 	}
 	return Followers
@@ -43,6 +44,8 @@ func GetFollowing(api *anaconda.TwitterApi, account string) []int64 {
 		//Print the current page of "Friends"
 		for _, id = range page.Ids {
 			Following = append(Following, id)
+			log.Debug("Getting another Following", id)
+
 		}
 	}
 	return Following

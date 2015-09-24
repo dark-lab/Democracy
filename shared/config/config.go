@@ -2,10 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/op/go-logging"
 	"os"
 	"strconv"
-
-	"github.com/op/go-logging"
 )
 
 var log = logging.MustGetLogger("democracy")
