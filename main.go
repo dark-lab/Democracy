@@ -88,8 +88,12 @@ func main() {
 		Followers := GetFollowers(api, i)
 		Following := GetFollowing(api, i)
 		var Corrispective []int64
-		for _, i := range Followers {
-			if utils.IntInSlice(i, Following) == true {
+		var MentionsWithCorrispective []int64
+		for _, i := range Following {
+			if _, ok := myUniqueMentions[i]; ok {
+				MentionsWithCorrispective = append(MentionsWithCorrispective, i)
+			}
+			if utils.IntInSlice(i, Followers) == true {
 				Corrispective = append(Corrispective, i)
 			}
 		}
@@ -100,6 +104,7 @@ func main() {
 		fmt.Println("\tFollowers: " + strconv.Itoa(len(Followers)))
 		fmt.Println("\tFollowing: " + strconv.Itoa(len(Following)))
 		fmt.Println("\tFollowers && Following: " + strconv.Itoa(len(Corrispective)))
+		fmt.Println("\tBetween mentions, those are whom the user is following: " + strconv.Itoa(len(MentionsWithCorrispective)))
 
 	}
 
