@@ -21,6 +21,7 @@ func GetTwitter(conf *config.Configuration) *anaconda.TwitterApi {
 func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 	v := url.Values{}
 	v.Set("screen_name", account)
+	v.Set("count", "200")
 	var User anaconda.User
 	var Followers []int64
 	pages := api.GetFollowersListAll(v)
@@ -37,6 +38,7 @@ func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 func GetFollowing(api *anaconda.TwitterApi, account string) []int64 {
 	v := url.Values{}
 	v.Set("screen_name", account)
+	v.Set("count", "5000")
 	var Following []int64
 	var id int64
 	pages := api.GetFriendsIdsAll(v)

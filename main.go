@@ -58,7 +58,7 @@ func GenerateData(configurationFile string) {
 		panic(err)
 	}
 	//api := GetTwitter(&conf)
-	db := nutz.NewStorage("democracy.db", 0600, nil)
+	db := nutz.NewStorage(configurationFile+".db", 0600, nil)
 	mygraph := Graph{Nodes: []Node{}, Links: []Link{}}
 	count := 0
 	innercount := 0
@@ -130,7 +130,7 @@ func GatherData(configurationFile string) {
 	myTweets := make(map[string]timelinesTweets)
 	api := GetTwitter(&conf)
 
-	db := nutz.NewStorage("democracy.db", 0600, nil)
+	db := nutz.NewStorage(configurationFile+".db", 0600, nil)
 
 	retweetRegex, _ := regexp.Compile(`^RT`) // detecting retweets
 
