@@ -18,6 +18,16 @@ func GetTwitter(conf *config.Configuration) *anaconda.TwitterApi {
 	return api
 }
 
+func GetFollowersNumber(api *anaconda.TwitterApi, account string) int {
+	searchresult, _ := api.GetUsersShow(account, nil)
+	return searchresult.FollowersCount
+}
+
+func GetFollowingNumber(api *anaconda.TwitterApi, account string) int {
+	searchresult, _ := api.GetUsersShow(account, nil)
+	return searchresult.FriendsCount
+}
+
 func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 	v := url.Values{}
 	v.Set("screen_name", account)

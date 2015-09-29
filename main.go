@@ -88,8 +88,18 @@ func GenerateData(configurationFile string) {
 		log.Info("followers_followed: " + string(followers_followed.Data))
 		log.Info("mentions_to_followed: " + string(mentions_to_followed.Data))
 		myUniqueMentions := db.GetAll(account, "map_unique_mentions").DataList
+		nUniqueMentions, _ := strconv.Atoi(string(unique_mentions.Data))
+		nMentions_to_followed, _ := strconv.Atoi(string(mentions_to_followed.Data))
+		nTweets, _ := strconv.Atoi(string(tweets.Data))
+		nReTweets, _ := strconv.Atoi(string(retweets.Data))
+		om := OutsideMentions(nUniqueMentions, nMentions_to_followed)
+		apt := AnswerPeopleTax(nUniqueMentions, nMentions_to_followed, nTweets, nReTweets)
 
-		mygraph.Nodes = append(mygraph.Nodes, Node{Name: account, Group: group})
+		//  fmt.Println("\tDemocracy tax: " + FloatToString(di))
+		fmt.Println("\tOutside of circle mentions: " + FloatToString(om))
+		fmt.Println("\t of answering to external people: " + FloatToString(apt))
+
+		mygraph.Nodes = append(mygraph.Nodes, Node{Name: account, Group: group, Thickness: om, Size: apt})
 		innercount += count
 		for k, v := range myUniqueMentions {
 			innercount++
@@ -98,7 +108,7 @@ func GenerateData(configurationFile string) {
 			//User, _ := api.GetUsersShowById(id, nil)
 
 			//log.Info("[" + User.ScreenName + "]:" + string(v))
-			// in name del nodo poi mettici User.ScreeName
+			// now you can put User.ScreeName in the name of the node
 			weight, _ := strconv.Atoi(string(v))
 			mygraph.Nodes = append(mygraph.Nodes, Node{Name: string(k), Group: group})
 			mygraph.Links = append(mygraph.Links, Link{Source: innercount, Target: count, Value: weight})
