@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -35,11 +36,13 @@ func GetFollowers(api *anaconda.TwitterApi, account string) []int64 {
 	var User anaconda.User
 	var Followers []int64
 	pages := api.GetFollowersListAll(v)
+	counter := 0
 	for page := range pages {
 		//Print the current page of followers
 		for _, User = range page.Followers {
+			counter++
 			Followers = append(Followers, User.Id)
-			log.Debug("Getting another follower", User.Id)
+			log.Debug("["+strconv.Itoa(counter)+"] Getting another Follower", User.Id)
 		}
 	}
 	return Followers
@@ -52,12 +55,13 @@ func GetFollowing(api *anaconda.TwitterApi, account string) []int64 {
 	var Following []int64
 	var id int64
 	pages := api.GetFriendsIdsAll(v)
+	counter := 0
 	for page := range pages {
 		//Print the current page of "Friends"
 		for _, id = range page.Ids {
+			counter++
 			Following = append(Following, id)
-			log.Debug("Getting another Following", id)
-
+			log.Debug("["+strconv.Itoa(counter)+"] Getting another Following", id)
 		}
 	}
 	return Following
@@ -65,15 +69,15 @@ func GetFollowing(api *anaconda.TwitterApi, account string) []int64 {
 
 func GetTimelines(api *anaconda.TwitterApi, account string, since int64) timelinesTweets {
 	myTweets := make(timelinesTweets)
-	log.Info("Searching info for: %#v\n", account)
-
 	var max_id int64
-
+	var tweet anaconda.Tweet
 	searchresult, _ := api.GetUsersShow(account, nil)
 	v := url.Values{}
+	var timeline []anaconda.Tweet
+	var Tweettime string
 	v.Set("user_id", searchresult.IdStr)
 	v.Set("count", "1") //getting twitter first tweet
-	timeline, _ := api.GetUserTimeline(v)
+	timeline, _ = api.GetUserTimeline(v)
 	max_id = timeline[0].Id // putting it as max_id
 	time, _ := timeline[0].CreatedAtTime()
 
@@ -83,15 +87,19 @@ func GetTimelines(api *anaconda.TwitterApi, account string, since int64) timelin
 		v.Set("user_id", searchresult.IdStr)
 		v.Set("count", "200")
 		v.Set("max_id", strconv.FormatInt(max_id, 10))
-		timeline, _ := api.GetUserTimeline(v)
-		for _, tweet := range timeline {
-			if tweet.Id < max_id {
-				max_id = tweet.Id
-			}
+		timeline, _ = api.GetUserTimeline(v)
+		for _, tweet = range timeline {
+
 			time, _ = tweet.CreatedAtTime()
 			myTweets[tweet.IdStr] = tweet
+			Tweettime = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d", time.Year(), time.Month(), time.Day(), time.Hour(), time.Minute(), time.Second())
+			log.Info("\tTweet @ " + Tweettime + " : " + tweet.IdStr)
+			max_id = tweet.Id
 		}
+		log.Info("\tFinished reading timeslice for " + account)
 	}
+	log.Info("\tFinished reading timeline for " + account)
+
 	return myTweets
 
 }

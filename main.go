@@ -145,7 +145,12 @@ func GatherData(configurationFile string) {
 	retweetRegex, _ := regexp.Compile(`^RT`) // detecting retweets
 
 	for _, account := range conf.TwitterAccounts {
+		log.Info("-== Timeline for Account: %#v ==-\n", account)
+
 		myTweets[account] = GetTimelines(api, account, conf.FetchFrom)
+
+		log.Info("-== END TIMELINE for %#v ==-\n", account)
+
 	}
 
 	log.Info("Analyzing && collecting data")
@@ -174,13 +179,18 @@ func GatherData(configurationFile string) {
 				for _, mentions = range t.Entities.User_mentions {
 
 					mymentions++
-					myUniqueMentions[mentions.Id]++
+					if t.InReplyToUserID != 0 { //we are interested only in replies
+						myUniqueMentions[mentions.Id]++
+					}
 
 				}
 			}
 		}
+		log.Info("-== GetFollowers for Account: %#v ==-\n", i)
 		Followers := GetFollowers(api, i)
+		log.Info("-== GetFollowing for Account: %#v ==-\n", i)
 		Following := GetFollowing(api, i)
+		log.Info("-== End getting Following/Followers for Account: %#v ==-\n", i)
 		var Corrispective []int64
 		var MentionsWithCorrispective []int64
 		for _, i := range Following {
