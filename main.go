@@ -186,47 +186,52 @@ func GatherData(configurationFile string) {
 				}
 			}
 		}
-		log.Info("-== GetFollowers for Account: %#v ==-\n", i)
-		Followers := GetFollowers(api, i)
-		log.Info("-== GetFollowing for Account: %#v ==-\n", i)
-		Following := GetFollowing(api, i)
-		log.Info("-== End getting Following/Followers for Account: %#v ==-\n", i)
-		var Corrispective []int64
-		var MentionsWithCorrispective []int64
-		for _, i := range Following {
-			if _, ok := myUniqueMentions[i]; ok {
-				MentionsWithCorrispective = append(MentionsWithCorrispective, i)
+		if conf.FetchFollow == true {
+			log.Info("-== GetFollowers for Account: %#v ==-\n", i)
+			Followers := GetFollowers(api, i)
+			log.Info("-== GetFollowing for Account: %#v ==-\n", i)
+			Following := GetFollowing(api, i)
+			log.Info("-== End getting Following/Followers for Account: %#v ==-\n", i)
+			var Corrispective []int64
+			var MentionsWithCorrispective []int64
+			for _, i := range Following {
+				if _, ok := myUniqueMentions[i]; ok {
+					MentionsWithCorrispective = append(MentionsWithCorrispective, i)
+				}
+				if utils.IntInSlice(i, Followers) == true {
+					Corrispective = append(Corrispective, i)
+				}
 			}
-			if utils.IntInSlice(i, Followers) == true {
-				Corrispective = append(Corrispective, i)
-			}
+
+			fmt.Println("\tFollowers: " + strconv.Itoa(len(Followers)))
+			fmt.Println("\tFollowing: " + strconv.Itoa(len(Following)))
+			fmt.Println("\tFollowers && Following: " + strconv.Itoa(len(Corrispective)))
+			fmt.Println("\tBetween mentions, those are whom the user is following: " + strconv.Itoa(len(MentionsWithCorrispective)))
+
+			//di := DemocracyIndex(len(myUniqueMentions), len(MentionsWithCorrispective), len(myTweets[i]), retweets)
+			om := OutsideMentions(len(myUniqueMentions), len(MentionsWithCorrispective))
+			apt := AnswerPeopleTax(len(myUniqueMentions), len(MentionsWithCorrispective), len(myTweets[i]), retweets)
+
+			//	fmt.Println("\tDemocracy tax: " + FloatToString(di))
+			fmt.Println("\tOutside of circle mentions: " + FloatToString(om))
+			fmt.Println("\t of answering to external people: " + FloatToString(apt))
+
+			db.Create(i, "followers", []byte(strconv.Itoa(len(Followers))))
+			db.Create(i, "following", []byte(strconv.Itoa(len(Following))))
+			db.Create(i, "followers_followed", []byte(strconv.Itoa(len(Corrispective))))
+			db.Create(i, "mentions_to_followed", []byte(strconv.Itoa(len(MentionsWithCorrispective))))
+
 		}
 
 		fmt.Println("\tof wich, there are " + strconv.Itoa(retweets) + " retweets")
 		fmt.Println("\tof wich, there are " + strconv.Itoa(len(myUniqueMentions)) + " unique mentions (not in retweets)")
 		fmt.Println("\tof wich, there are " + strconv.Itoa(mymentions) + " total mentions (not in retweets)")
-		fmt.Println("\tFollowers: " + strconv.Itoa(len(Followers)))
-		fmt.Println("\tFollowing: " + strconv.Itoa(len(Following)))
-		fmt.Println("\tFollowers && Following: " + strconv.Itoa(len(Corrispective)))
-		fmt.Println("\tBetween mentions, those are whom the user is following: " + strconv.Itoa(len(MentionsWithCorrispective)))
-
-		//di := DemocracyIndex(len(myUniqueMentions), len(MentionsWithCorrispective), len(myTweets[i]), retweets)
-		om := OutsideMentions(len(myUniqueMentions), len(MentionsWithCorrispective))
-		apt := AnswerPeopleTax(len(myUniqueMentions), len(MentionsWithCorrispective), len(myTweets[i]), retweets)
-
-		//	fmt.Println("\tDemocracy tax: " + FloatToString(di))
-		fmt.Println("\tOutside of circle mentions: " + FloatToString(om))
-		fmt.Println("\t of answering to external people: " + FloatToString(apt))
 
 		db.Create(i, "from", []byte(conf.Date))
 		db.Create(i, "tweets", []byte(strconv.Itoa(len(myTweets[i]))))
 		db.Create(i, "retweets", []byte(strconv.Itoa(retweets)))
 		db.Create(i, "unique_mentions", []byte(strconv.Itoa(len(myUniqueMentions))))
 		db.Create(i, "total_mentions", []byte(strconv.Itoa(mymentions)))
-		db.Create(i, "followers", []byte(strconv.Itoa(len(Followers))))
-		db.Create(i, "following", []byte(strconv.Itoa(len(Following))))
-		db.Create(i, "followers_followed", []byte(strconv.Itoa(len(Corrispective))))
-		db.Create(i, "mentions_to_followed", []byte(strconv.Itoa(len(MentionsWithCorrispective))))
 
 		for k, v := range myUniqueMentions {
 			db.Create(i, strconv.FormatInt(k, 10), []byte(strconv.Itoa(v)), "map_unique_mentions")

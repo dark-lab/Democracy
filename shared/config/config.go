@@ -17,6 +17,7 @@ type Configuration struct {
 	TwitterAccounts          []string `json:"twitter_accounts"`
 	Date                     string   `json:"fetch_from"`
 	FetchFrom                int64
+	FetchFollow              bool `json:"fetch_follow"`
 }
 
 func LoadConfig(f string) (Configuration, error) {
@@ -26,7 +27,7 @@ func LoadConfig(f string) (Configuration, error) {
 		panic(err)
 	}
 	var conf Configuration
-
+	conf.FetchFollow = false
 	decoder := json.NewDecoder(jsonFile)
 	err = decoder.Decode(&conf)
 	if err != nil {
