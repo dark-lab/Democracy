@@ -119,7 +119,7 @@ func GenerateData(configurationFile string) {
 
 	}
 	fileJson, _ := json.MarshalIndent(mygraph, "", "  ")
-	err = ioutil.WriteFile("Democracy.json", fileJson, 0644)
+	err = ioutil.WriteFile(configurationFile+".output", fileJson, 0644)
 	if err != nil {
 		log.Info("WriteFileJson ERROR: " + err.Error())
 	}
