@@ -61,8 +61,8 @@ func GenerateData(configurationFile string) {
 	//api := GetTwitter(&conf)
 	db := nutz.NewStorage(configurationFile+".db", 0600, nil)
 	mygraph := Graph{Nodes: []Node{}, Links: []Link{}}
-	count := 0
 	innercount := 0
+	nodecount := 0
 	group := 0
 	for _, account := range conf.TwitterAccounts {
 		tweets := db.Get(account, "tweets")
@@ -97,34 +97,34 @@ func GenerateData(configurationFile string) {
 		om := OutsideMentions(nUniqueMentions, nMentions_to_followed)
 		apt := AnswerPeopleTax(nUniqueMentions, nMentions_to_followed, nTweets, nReTweets)
 		if math.IsNaN(float64(om)) {
-			om = float32(0)
+			om = float32(0.01)
 		}
 		if math.IsNaN(float64(apt)) {
-			apt = float32(0)
+			apt = float32(0.01)
 		}
 
 		//  fmt.Println("\tDemocracy tax: " + FloatToString(di))
 		fmt.Println("\tOutside of circle mentions: " + FloatToString(om))
 		fmt.Println("\t of answering to external people: " + FloatToString(apt))
-
 		mygraph.Nodes = append(mygraph.Nodes, Node{Name: account, Group: group, Thickness: om, Size: apt})
-		innercount += count
+
 		for k, v := range myUniqueMentions {
-			innercount++
 
 			//id, _ := strconv.ParseInt(k, 10, 64)
 			//User, _ := api.GetUsersShowById(id, nil)
 
 			//log.Info("[" + User.ScreenName + "]:" + string(v))
 			// now you can put User.ScreeName in the name of the node
+
 			weight, _ := strconv.Atoi(string(v))
-			mygraph.Nodes = append(mygraph.Nodes, Node{Name: string(k), Group: group})
-			mygraph.Links = append(mygraph.Links, Link{Source: innercount, Target: count, Value: weight})
+			mygraph.Nodes = append(mygraph.Nodes, Node{Name: string(k), Group: group, Thickness: 0.01, Size: 0.01})
 
+			mygraph.Links = append(mygraph.Links, Link{Source: innercount, Target: nodecount, Value: weight})
+			innercount++
 		}
+		innercount++
+		nodecount = innercount
 		group++
-		count++
-
 	}
 	fileJson, _ := json.MarshalIndent(mygraph, "", "  ")
 	err = ioutil.WriteFile(configurationFile+".output", fileJson, 0644)
