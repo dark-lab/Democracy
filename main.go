@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -92,8 +93,15 @@ func GenerateData(configurationFile string) {
 		nMentions_to_followed, _ := strconv.Atoi(string(mentions_to_followed.Data))
 		nTweets, _ := strconv.Atoi(string(tweets.Data))
 		nReTweets, _ := strconv.Atoi(string(retweets.Data))
+
 		om := OutsideMentions(nUniqueMentions, nMentions_to_followed)
 		apt := AnswerPeopleTax(nUniqueMentions, nMentions_to_followed, nTweets, nReTweets)
+		if math.IsNaN(float64(om)) {
+			om = float32(0)
+		}
+		if math.IsNaN(float64(apt)) {
+			apt = float32(0)
+		}
 
 		//  fmt.Println("\tDemocracy tax: " + FloatToString(di))
 		fmt.Println("\tOutside of circle mentions: " + FloatToString(om))
